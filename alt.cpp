@@ -6,9 +6,7 @@
 #include <iostream>
 #include <utility>
 #include <random>
-#include <getopt.h>
 #include <algorithm>
-#include <chrono>
 
 std::random_device rd;
 std::mt19937 rng(rd());
@@ -55,102 +53,87 @@ double evaluate_cycle(std::vector<size_t> &cycle, hmap& closeMap) {
 	return fitness;
 }
 
-void dfs(
+bool dfs(
 		std::vector<size_t> &current,
 		std::vector<std::pair<std::vector<size_t>, double>> &cycles,
 		hmap &closeMap,
 		size_t depth,
 		std::unordered_set<size_t> visited) {
 	
+			
+	for(size_t i = 0; i < current.size(); ++i) {
+		std::cout << current[i] << " ";
+	}
+	std::cout << "\n";
+
+
+	// if reached bottom, go out
 	if(depth == 0) {
-		return;
+		return false;
 	}
 
+	// get current node
 	size_t current_node = current.back();
+	// if already visited
 	if(visited.insert(current_node).second == false) {
+		// calculate fitness of cycle
 		double fitness = evaluate_cycle(current, closeMap);
+		// if fitness doesn't suck, add it to cycles and return true
 		if(fitness > 1.0) {
 			cycles.push_back(std::make_pair(current, fitness));
+			return true;
 		}
-	} else {
-		std::unordered_map<unsigned, unsigned> possible_jumps = closeMap[current_node];
-		std::uniform_int_distribution<size_t> dist(0, possible_jumps.size() - 1);
-		size_t index = dist(rng);
-		for(auto &jump : possible_jumps) {
-			if(index-- != 0) {
-				continue;
+	} else { // not visited
+		// get all neighbours
+		std::unordered_map<unsigned, unsigned> possible_jumpss = closeMap[current_node];
+		
+		// shuffle possible neighbours
+		std::vector<size_t> possible_jumps;
+		possible_jumps.reserve(closeMap[current_node].size());
+		for(auto kv: closeMap[current_node]) {
+			possible_jumps.push_back(kv.first);
+		}
+		std::shuffle(std::begin(possible_jumps), std::end(possible_jumps), rng);
+
+		// visit each neighbour until cycle is found
+		for(size_t index : possible_jumps) {
+			current.push_back(index);
+			bool cycle_found = dfs(current, cycles, closeMap, depth - 1, visited); 
+			if(cycle_found) {
+				return true;
 			}
-			current.push_back(jump.first);
-			dfs(current, cycles, closeMap, depth - 1, visited);
+			// if not found, pop previous neighbour and continue loop
 			current.pop_back();
 		}
 	}
+
+	// if nothing was found return false;
 	visited.erase(current_node);
+	return false;
 }
 
-void find_cycles(std::vector<size_t> &startingPos, std::vector<std::pair<std::vector<size_t>, double>> &cycles, hmap &volumeMap, hmap &closeMap, size_t amount, size_t max_depth, size_t time_limit) {
+void find_cycles(std::vector<size_t> &startingPos, std::vector<std::pair<std::vector<size_t>, double>> &cycles, hmap &volumeMap, hmap &closeMap, size_t amount, size_t max_depth) {
 	std::unordered_set<size_t> visited;
 	std::vector<size_t> current;
 	size_t dfs_amount = amount / startingPos.size();
-	bool running = true;
-	auto start = std::chrono::high_resolution_clock::now();
-	for(size_t i = 0; i < startingPos.size() && running; ++i) {
+	for(size_t i = 0; i < startingPos.size(); ++i) {
 		current.clear();
 		current.push_back(startingPos[i]);
-		for(size_t j = 0; j < dfs_amount && running; ++j){
+		for(size_t j = 0; j < dfs_amount; ++j){
+			std::cout << cycles.size() << "\n";
 			size_t old_cycle_size = cycles.size();
 			do {
 				dfs(current, cycles, closeMap, max_depth, visited);
-				auto now = std::chrono::high_resolution_clock::now();
-				auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(now - start);
-				if(duration.count() > time_limit) {
-					running = false;
-				}
-			} while(old_cycle_size == cycles.size() && running);
+			} while(old_cycle_size == cycles.size());
 		}
 	}
 }
 
-void write_output(std::vector<std::pair<std::vector<size_t>, double>> &cycles) {
-	std::fstream file("out.txt", std::ios::out);
-	file << "[";
-	for(size_t i = 0; i < cycles.size(); ++i) {
-		file << "([" << cycles[i].first[0];
-		for(size_t j = 1; j < cycles[i].first.size(); ++j) {
-			file << ", " << cycles[i].first[j];
-		}
-		file << "], " << cycles[i].second << ")";
-		if(i != cycles.size() - 1) {
-			file << ", ";
-		}
-	}
-	file << "]";
-}
-
-int main(int argc, char* argv[]) {
-	size_t amount = 5;
-	size_t max_depth = 100;
-	size_t time_limit = 1000;
-	for(;;) {
-		switch(getopt(argc, argv, "n:d:t:")) {
-			case -1:
-				break;
-			case 'n':
-				amount = std::atoi(optarg);
-				continue;
-			case 'd':
-				max_depth = std::atoi(optarg);
-				continue;
-			case 't':
-				time_limit = std::atoi(optarg);
-				continue;
-		}
-		break;
-	}
-
-
+int main() {
 	rng.seed(time(NULL));
-	
+	size_t amount = 20;
+	size_t max_depth = 5;
+
 	hmap volumeMap;
 	hmap closeMap;
 	std::vector<size_t> startingPos;
@@ -159,13 +142,20 @@ int main(int argc, char* argv[]) {
 	load_maps(volumeMap, closeMap, startingPos);
 
 	// nac cikluse (koliko, max dubina) DFS
-	find_cycles(startingPos, cycles, volumeMap, closeMap, amount, max_depth, time_limit);
+	find_cycles(startingPos, cycles, volumeMap, closeMap, amount, max_depth);
+	
 
-	std::sort(cycles.begin(), cycles.end(), [](auto &left, auto &right) {
-    return left.second > right.second;
-	});
+	for(size_t i = 0; i < cycles.size(); ++i) {
+		for(size_t j = 0; j < cycles[i].first.size(); ++j) {
+			std::cout << cycles[i].first[j] << " ";
+		}
+		std::cout << " fitness=" << cycles[i].second <<"\n";
+	}
 
-	write_output(cycles);
+	// evaluirat cikluse
+	//evaluate_cycles();
 
-	return 0;
+	// [0 1 2 3 4 5 6 5 4 3]
+
+
 }
