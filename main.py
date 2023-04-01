@@ -100,6 +100,4 @@ if __name__ == "__main__":
     tick_finder()
     while True:
         print(get_time())
-        print(get_time())
-        print(get_time())
         time.sleep(30)
