@@ -104,7 +104,7 @@ void find_cycles(std::vector<size_t> &startingPos, std::vector<std::pair<std::ve
 				auto now = std::chrono::high_resolution_clock::now();
 				auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(now - start);
 				if(duration.count() > time_limit) {
-					running = false;
+					running = true;
 				}
 			} while(old_cycle_size == cycles.size() && running);
 		}

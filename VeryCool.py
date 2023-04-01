@@ -95,7 +95,7 @@ def find_stonks(data, poss, n_cycles=5, max_depth=20, time_limit=500):
 	with open("out.txt", "r") as f:
 		cycles = eval(f.readline())
 	
-	fran_cycles = [(idx2key[cycles[i][0][j]],idx2key[cycles[i][0][j + 1]],-1) for i in range(len(cycles)) for j in range(len(cycles[i][0]) - 1)]
+	fran_cycles = [[(idx2key[cycles[i][0][j]],idx2key[cycles[i][0][j + 1]],-1) for j in range(len(cycles[i][0]) - 1)] for i in range(len(cycles))]
 
 	return closeDict, volumeDict, idx2key, key2idx, cycles, fran_cycles
 
@@ -106,4 +106,4 @@ if __name__ == '__main__':
 	import requests
 	data = requests.get(url='http://192.168.1.101:3000/getAllPairs').json()
 	closeDict, volumeDict, idx2key, key2idx, cycles, fran_cycles = find_stonks(data, ['USDT'])
-	print(cycles)
+	print(fran_cycles)
