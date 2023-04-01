@@ -77,8 +77,8 @@ def get_time():
         return None
 
 
-def tick_finder(time_wait=30, num_hops=5):
-    delay = 0.400001
+def tick_finder(time_wait=30, num_hops=3):
+    delay = 0.25
     current_tick = get_time()
 
     for _ in range(num_hops):
@@ -88,7 +88,9 @@ def tick_finder(time_wait=30, num_hops=5):
             if current_tick != next_tick:
                 break
         time.sleep(time_wait - (delay * 1.02))
-        delay /= 5
+        delay /= 10
+        
+    return time.time()
 
 
 if __name__ == "__main__":
@@ -96,5 +98,7 @@ if __name__ == "__main__":
     get_time()
     tick_finder()
     while True:
+        print(get_time())
+        print(get_time())
         print(get_time())
         time.sleep(30)
