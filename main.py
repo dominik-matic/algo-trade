@@ -77,9 +77,7 @@ def create_orders(orders: list) -> bool:
     Args:
         orders (list): orders
     """
-    orders = list(
-        (order[0], order[1], str(int(order[2] * 10**8))) for order in orders
-    )
+    orders = list((order[0], order[1], str(int(order[2]))) for order in orders)
 
     orders = "|".join(",".join(order) for order in orders)
     response = requests.get(f"{HOST}/createOrders/{USER}/{SECRET}/{orders}")
@@ -88,7 +86,7 @@ def create_orders(orders: list) -> bool:
         print(f"successfull trades: {orders}")
         return True
     else:
-        print(f"FAILED: order ({orders})")
+        print(f"FAILED: order ({orders}) ({response.content})")
         return False
 
 
@@ -135,16 +133,14 @@ def trade(orders):
         update_balance(orders)
 
 
-if __name__ == "__main__":
+def main():
     load_secret()
     # tick_finder()
     balance()
 
-    orders = [("BTC", "USDT", 0.001)]
+    orders = [("BTC", "ATOM", 0)]
     trade(orders)
 
-    save_bal = BALANCE.copy()
-    balance()
-    print(save_bal)
-    print(BALANCE)
-    print(save_bal == BALANCE)
+
+if __name__ == "__main__":
+    main()
