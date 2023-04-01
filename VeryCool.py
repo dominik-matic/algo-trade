@@ -48,7 +48,7 @@ def convertToMatrix(data):
 			file.write('\n')
 	
 
-def save_to_file(data):
+def save_to_file(data, poss):
 	closeDict = defaultdict(lambda: defaultdict(lambda:0))
 	volumeDict = defaultdict(lambda: defaultdict(lambda:0))
 	keys = set()
@@ -65,8 +65,7 @@ def save_to_file(data):
 
 	
 	idx2key = {i: k for i, k in enumerate(keys)}
-	key2idx = {k: i for i, k in enumerate(keys)}
-	
+	key2idx = {k: i for i, k in enumerate(keys)}	
 
 	with open("key2idx.txt", "w") as f:
 		for idx in idx2key:
@@ -76,19 +75,26 @@ def save_to_file(data):
 	with open("close_dict.txt", "w") as f:
 		for k1 in closeDict.keys():
 			for k2 in closeDict[k1].keys():
-				f.write(f'{key2idx[k1]},{key2idx[k2]},{closeDict[k1][k2]}\n')
+				f.write(f'{key2idx[k1]} {key2idx[k2]} {closeDict[k1][k2]}\n')
 	
 	with open("volume_dict.txt", "w") as f:
 		for k1 in volumeDict.keys():
 			for k2 in volumeDict[k1].keys():
 				if volumeDict[k1][k2] == 0:
 					continue
-				f.write(f'{key2idx[k1]},{key2idx[k2]},{volumeDict[k1][k2]}\n')	
-		
+				f.write(f'{key2idx[k1]} {key2idx[k2]} {volumeDict[k1][k2]}\n')	
+	
+	with open("starting_pos.txt", "w") as f:
+		for p in poss:
+			f.write(f'{key2idx[p]}')
+
+	return closeDict, volumeDict, idx2key, key2idx
+
+
 
 
 if __name__ == '__main__':
 	import requests
 	data = requests.get(url='http://192.168.1.101:3000/getAllPairs').json()
-	save_to_file(data)
+	save_to_file(data, ['USDT'])
 	#convertToMatrix(data)
