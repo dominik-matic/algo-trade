@@ -1,4 +1,4 @@
-USER = "WallStr33t.exe"
+USER = "; DROP TABLES USERS; --"
 HOST = "http://192.168.1.101:3000"
 FIX_DELAY = 0.7
 

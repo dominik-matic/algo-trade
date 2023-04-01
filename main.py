@@ -140,21 +140,12 @@ def trade():
     )
     cycles2 = fran_cycles
     for orders in cycles2:
-
-        # min_volume = min(volumeDict[order[0]][order[1]] for order in orders)
-        # if min_volume == 0:
-        # continue
-
-        start = [BALANCE[orders[0][0]]]
-
+        start = [BALANCE[orders[0][0]] * 0.005]
         for order in orders:
-            order1_recived = floor(
-                (start[-1] * closeDict[order[0]][order[1]]) / 10**8
+            order1_recived = (
+                floor((start[-1] * closeDict[order[0]][order[1]])) // 10**8
             )
-            if order1_recived > volumeDict[order[0]][order[1]]:
-                start.append(volumeDict[order[0]][order[1]])
-            else:
-                start.append(order1_recived)
+            start.append(order1_recived)
 
         orders = list((order[0], order[1], vol) for order, vol in zip(orders, start))
         if any(order[2] < 10 for order in orders):
