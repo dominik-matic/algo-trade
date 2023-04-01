@@ -81,15 +81,16 @@ def tick_finder(time_wait=30, num_hops=3):
     delay = 0.25
     current_tick = get_time()
 
-    for _ in range(num_hops):
+    for i in range(num_hops):
         while True:
             time.sleep(delay)
             next_tick = get_time()
             if current_tick != next_tick:
                 break
-        time.sleep(time_wait - (delay * 1.02))
-        delay /= 10
-        
+        if i < num_hops - 1:
+            time.sleep(time_wait - (delay * 1.02))
+            delay /= 10
+
     return time.time()
 
 
