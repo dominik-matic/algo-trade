@@ -1,5 +1,6 @@
 import requests
 import json
+import time
 
 from config import USER
 
@@ -67,10 +68,40 @@ def balance():
         print("FAILED: balance")
 
 
+def get_time():
+    response = requests.get(f"{HOST}/getTime")
+    if response.status_code == 200:
+        return int(response.json())
+    else:
+        print("FAILED: getTime")
+        return None
+
+
+def tick_finder(time_wait=30, num_hops=10):
+    for _ in range(10):
+        current_tick = get_time()
+        time.sleep(time_wait)
+        next_tick = get_time()
+
+        if current_tick != next_tick:
+            time_wait /= 2
+        else:
+            time_wait *= 2
+
+    while True:
+        current_tick = get_time()
+        time.sleep(time_wait)
+        next_tick = get_time()
+        if current_tick != next_tick:
+            return
+        time_wait += time_wait / 2
+
+
 if __name__ == "__main__":
     load_secret()
-    # print(get_all_pairs())
-    # exit()
-    print(balance())
-    create_orders([("USDT", "DUSK", "100")])
-    print(balance())
+    get_time()
+    tick_finder()
+    while True:
+        print(get_time())
+        time.sleep(30)
+
