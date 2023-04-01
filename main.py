@@ -12,11 +12,13 @@ ALL_PAIRS = {}
 
 def update_balance(orders): #lista tupla (from, to, volume)
     for order in orders:
-        fromStock, toStock, volume = order[0], order[1], order[2]
+        fromStock, toStock, volume = order
+        
         if toStock not in BALANCE.keys():
             BALANCE[toStock] = volume * ALL_PAIRS[f"close_{fromStock},{toStock}"]
         else:
             BALANCE[toStock] += volume * ALL_PAIRS[f"close_{fromStock},{toStock}"]
+        BALANCE[fromStock] -= volume * 10**8
 
 
 def sync():
@@ -117,7 +119,8 @@ if __name__ == "__main__":
     load_secret()
     #tick_finder()
     balance()
-    print(BALANCE)
+    BALANCE["USDT"] = 100
     get_all_pairs()
-    update_balance([("MBOX", "BTC", 100)])
+    res = update_balance([("USDT", "BTC", 10111)])
+    print(res)
     print(BALANCE)
