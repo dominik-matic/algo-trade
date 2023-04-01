@@ -130,7 +130,7 @@ def tick_finder(time_wait=30, num_hops=NUM_HOPS) -> None:
 
 def trade():
     closeDict, volumeDict, idx2key, key2idx, cycles, fran_cycles = find_stonks(
-        ALL_PAIRS, ["ATOM"], n_cycles=5, max_depth=5
+        ALL_PAIRS, ["ATOM"], n_cycles=5, max_depth=50
     )
     orders = fran_cycles[0]
 
