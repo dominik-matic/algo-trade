@@ -5,6 +5,7 @@ import threading
 
 from config import USER, FIX_DELAY, HOST, TICKRATE, NUM_HOPS
 from VeryCool import find_stonks
+from math import floor
 
 SECRET = None
 TICK_TIME = None
@@ -86,7 +87,9 @@ def create_orders(orders: list) -> bool:
     response = requests.get(f"{HOST}/createOrders/{USER}/{SECRET}/{orders}")
 
     if response.status_code == 200:
-        print(f"successfull trades: {orders}")
+        print("%%%%%%%")
+        print(f"% successfull trades: {orders}")
+        print("%%%%%%%")
         return True
     else:
         print(f"FAILED: order ({orders}) ({response.content})")
@@ -111,7 +114,7 @@ def get_current_tick() -> int:
         return None
 
 
-def tick_finder(time_wait=30, num_hops=NUM_HOPS) -> None:
+def tick_finder(time_wait=TICKRATE, num_hops=NUM_HOPS) -> None:
     global TICK_TIME
     delay = 0.25
     current_tick = get_current_tick()
@@ -130,37 +133,35 @@ def tick_finder(time_wait=30, num_hops=NUM_HOPS) -> None:
 
 
 def trade():
-
     all_tickers = list(ticker for ticker in BALANCE if BALANCE[ticker] > 0)
-    print(all_tickers)
 
     closeDict, volumeDict, idx2key, key2idx, cycles, fran_cycles = find_stonks(
         ALL_PAIRS, all_tickers, n_cycles=5, max_depth=50
     )
-    cycles = fran_cycles
-    for orders in cycles:
+    cycles2 = fran_cycles
+    for orders in cycles2:
 
-        min_volume = min(volumeDict[order[0]][order[1]] for order in orders)
-        if min_volume == 0:
-            continue
+        # min_volume = min(volumeDict[order[0]][order[1]] for order in orders)
+        # if min_volume == 0:
+        # continue
 
-        start = [1 * 10**2]
+        start = [BALANCE[orders[0][0]]]
+
         for order in orders:
-            if volumeDict[order[0]][order[1]] == 0:
-                start = None
-                break
-            print(volumeDict[order[0]][order[1]])
-            start.append(
-                min(
-                    int((start[-1] * closeDict[order[0]][order[1]]) / 10**8),
-                    volumeDict[order[0]][order[1]],
-                )
+            order1_recived = floor(
+                (start[-1] * closeDict[order[0]][order[1]]) / 10**8
             )
+            if order1_recived > volumeDict[order[0]][order[1]]:
+                start.append(volumeDict[order[0]][order[1]])
+            else:
+                start.append(order1_recived)
 
         orders = list((order[0], order[1], vol) for order, vol in zip(orders, start))
+        if any(order[2] < 10 for order in orders):
+            continue
 
         if create_orders(orders):
-            update_balance(orders)
+            balance()
 
 
 def update_thread():
@@ -171,6 +172,8 @@ def update_thread():
     while True:
         sync()
         get_all_pairs()
+        balance()
+        print("% THREAD: I did updaty")
 
 
 def main():
