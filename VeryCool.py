@@ -105,5 +105,5 @@ def find_stonks(data, poss, n_cycles=5, max_depth=20, time_limit=500):
 if __name__ == '__main__':
 	import requests
 	data = requests.get(url='http://192.168.1.101:3000/getAllPairs').json()
-	closeDict, volumeDict, idx2key, key2idx, cycles, fran_cycles = find_stonks(data, ['USDT'])
+	closeDict, volumeDict, idx2key, key2idx, cycles, fran_cycles = find_stonks(data, ['ATOM'])
 	print(fran_cycles)
