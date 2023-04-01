@@ -64,6 +64,10 @@ def find_stonks(data, poss, n_cycles=5, max_depth=20, time_limit=500):
 		elif type == 'close':
 			closeDict[source][dest] = data[key]
 
+#	for kv1 in volumeDict:
+#		print(kv1)
+#		for kv2 in volumeDict[kv1]:
+#			print(f'\t{kv2}={volumeDict[kv1][kv2]}')
 	
 	idx2key = {i: k for i, k in enumerate(keys)}
 	key2idx = {k: i for i, k in enumerate(keys)}	
@@ -81,9 +85,10 @@ def find_stonks(data, poss, n_cycles=5, max_depth=20, time_limit=500):
 	with open("volume_dict.txt", "w") as f:
 		for k1 in volumeDict.keys():
 			for k2 in volumeDict[k1].keys():
-				if volumeDict[k1][k2] == 0:
+				if int(volumeDict[k1][k2]) == 0:
 					continue
-				f.write(f'{key2idx[k1]} {key2idx[k2]} {volumeDict[k1][k2]}\n')	
+				f.write(f'{key2idx[k1]} {key2idx[k2]} {volumeDict[k1][k2]}\n')
+
 	
 	with open("starting_pos.txt", "w") as f:
 		for p in poss:
