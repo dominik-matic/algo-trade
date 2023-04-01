@@ -9,6 +9,7 @@
 #include <getopt.h>
 #include <algorithm>
 #include <chrono>
+#include <queue>
 
 std::random_device rd;
 std::mt19937 rng(rd());
@@ -100,6 +101,7 @@ void find_cycles(std::vector<size_t> &startingPos, std::vector<std::pair<std::ve
 
 	for(size_t i = 0; i < startingPos.size() && running; ++i) {
 		current.clear();
+		visited.clear();
 		current.push_back(startingPos[i]);
 		for(size_t j = 0; j < dfs_amount && running; ++j){
 			size_t old_cycle_size = cycles.size();
@@ -131,8 +133,65 @@ void write_output(std::vector<std::pair<std::vector<size_t>, double>> &cycles) {
 	file << "]";
 }
 
-void find_ways_back(std::vector<size_t> &paths_back) {
+bool bfs(hmap& closeMap, size_t start, std::vector<std::vector<size_t>> &paths_back, size_t destination) {
+	std::cout << "bfs\n";
+	std::unordered_set<size_t> visited;
+	std::vector<size_t> current;
+	std::queue<size_t> q;
+	q.push(start);
+	//visited.insert(start);
+	//current.push_back(start);
 
+	while(q.size() != 0) {
+		
+		size_t node = q.front(); q.pop();
+		current.push_back(node);
+		if(node == destination) {
+			paths_back.push_back(current);
+			return true;
+		}
+		std::unordered_map<unsigned, unsigned> neighbours_map = closeMap[node];
+		std::vector<size_t> neighbours;
+		for(auto kv : closeMap[node]) {
+			neighbours.push_back(kv.first);
+		}
+		std::shuffle(std::begin(neighbours), std::end(neighbours), rng);
+
+		for(size_t neigh : neighbours) {
+			if(visited.insert(neigh).second == true) {
+				q.push(neigh);
+			}
+		}
+	}
+	return false;
+}
+
+void find_ways_back(std::vector<size_t>& startingPos, hmap& closeMap, std::vector<std::vector<size_t>> &paths_back, size_t amount) {
+	size_t destination = startingPos[0];
+	for(size_t i = 1; i < startingPos.size(); ++i) {
+		for(size_t j = 0; j < amount; ++j) {
+			bool success;
+			do {
+				success = bfs(closeMap, startingPos[i], paths_back, destination);
+			} while(!success);
+		}
+	}
+}
+
+void write_to_out(std::vector<std::vector<size_t>> paths_back) {
+	std::fstream file("out.txt", std::ios::out);
+	file << "[";
+	for(size_t i = 0; i < paths_back.size(); ++i) {
+		file << "[" << paths_back[i][0];
+		for(size_t j = 1; j < paths_back[i].size(); ++j) {
+			file << ", " << paths_back[i][j];
+		}
+		file << "]";
+		if(i != paths_back.size() - 1) {
+			file << ", ";
+		}
+	}
+	file << "]";
 }
 
 int main(int argc, char* argv[]) {
@@ -160,14 +219,6 @@ int main(int argc, char* argv[]) {
 		break;
 	}
 
-	if(go_back) {
-		std::vector<size_t> paths_back;
-		find_ways_back(paths_back);
-		//write to out
-		return 0;
-	}
-
-
 	rng.seed(time(NULL));
 	
 	hmap volumeMap;
@@ -177,14 +228,23 @@ int main(int argc, char* argv[]) {
 
 	load_maps(volumeMap, closeMap, startingPos);
 
-	// nac cikluse (koliko, max dubina) DFS
-	find_cycles(startingPos, cycles, volumeMap, closeMap, amount, max_depth, time_limit);
+	if(go_back) {
+		std::vector<std::vector<size_t>> paths_back;
+		find_ways_back(startingPos, closeMap, paths_back, amount);
+		write_to_out(paths_back);
+		return 0;
+	} else {
+		// nac cikluse (koliko, max dubina) DFS
+		find_cycles(startingPos, cycles, volumeMap, closeMap, amount, max_depth, time_limit);
 
-	std::sort(cycles.begin(), cycles.end(), [](auto &left, auto &right) {
-    return left.second > right.second;
-	});
+		std::sort(cycles.begin(), cycles.end(), [](auto &left, auto &right) {
+		return left.second > right.second;
+		});
 
-	write_output(cycles);
+		write_output(cycles);
 
+	}
+
+	
 	return 0;
 }

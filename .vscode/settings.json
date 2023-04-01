@@ -61,6 +61,14 @@
 		"cinttypes": "cpp",
 		"typeindex": "cpp",
 		"typeinfo": "cpp",
-		"variant": "cpp"
+		"variant": "cpp",
+		"codecvt": "cpp",
+		"condition_variable": "cpp",
+		"source_location": "cpp",
+		"future": "cpp",
+		"semaphore": "cpp",
+		"stop_token": "cpp",
+		"thread": "cpp",
+		"valarray": "cpp"
 	}
 }

@@ -49,7 +49,7 @@ def convertToMatrix(data):
 			file.write('\n')
 	
 
-def find_stonks(data, poss, n_cycles=5, max_depth=20, time_limit=500):
+def find_stonks(data, poss, n_cycles=5, max_depth=20, time_limit=500, fuck=False):
 	closeDict = defaultdict(lambda: defaultdict(lambda:0))
 	volumeDict = defaultdict(lambda: defaultdict(lambda:0))
 	keys = set()
@@ -86,11 +86,21 @@ def find_stonks(data, poss, n_cycles=5, max_depth=20, time_limit=500):
 					continue
 				f.write(f'{key2idx[k1]} {key2idx[k2]} {volumeDict[k1][k2]}\n')
 
+	if fuck:
+		if 'USDT' in poss:
+			poss.remove('USDT')
+
+		paths = set()
+		for p in poss:
+			bfs(closeDict, p, 'USDT', n_cycles, paths)
+		return closeDict, volumeDict, idx2key, key2idx, None, paths
+	
+	
 	
 	with open("starting_pos.txt", "w") as f:
 		for p in poss:
 			f.write(f'{key2idx[p]} ')
-	
+
 	os.system(f"./lol -n {n_cycles} -d {max_depth} -t {time_limit}")
 
 	cycles = None
@@ -101,11 +111,28 @@ def find_stonks(data, poss, n_cycles=5, max_depth=20, time_limit=500):
 
 	return closeDict, volumeDict, idx2key, key2idx, cycles, fran_cycles
 
-
-
+def bfs(graph, start, end, count, paths):
+	queue = []
+	queue.append([start])
+	visited = set()
+	visited.add(start)
+	while queue:
+		path = queue.pop(0)
+		node = path[-1]
+		if node == end:
+			paths.add(tuple(path))
+			count -= 1
+			if count == 0:
+				break
+		for neighbour in graph[node]:
+			if neighbour not in visited:
+				new_path = list(path)
+				new_path.append(neighbour)
+				queue.append(new_path)
+			
 
 if __name__ == '__main__':
 	import requests
 	data = requests.get(url='http://192.168.1.101:3000/getAllPairs').json()
-	closeDict, volumeDict, idx2key, key2idx, cycles, fran_cycles = find_stonks(data, ['BRL', 'EUR', 'ATOM', 'DUSK', 'GMT', 'BTC'])
+	closeDict, volumeDict, idx2key, key2idx, cycles, fran_cycles = find_stonks(data, ['BRL', 'EUR', 'ATOM', 'DUSK', 'GMT', 'BTC'], fuck=False)
 	print(fran_cycles)
