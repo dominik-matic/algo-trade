@@ -8,10 +8,12 @@ SECRET = None
 TICK_TIME = None
 BALANCE = {}
 
+
 def sync():
     while time.time() < TICK_TIME:
         TICK_TIME += TICKRATE
     time.sleep(TICKTIME - time.time())
+
 
 def reg_user(username: str) -> None:
     response = requests.get(f"{HOST}/register/{username}")
