@@ -1,16 +1,22 @@
 import requests
 import json
 import time
+import VeryCool
 
 from config import USER, FIX_DELAY, HOST, TICKRATE
 
 SECRET = None
 TICK_TIME = None
 BALANCE = {}
+ALL_PAIRS = {}
 
-
-def update_balance(orders):
-    pass
+def update_balance(orders): #lista tupla (from, to, volume)
+    for order in orders:
+        fromStock, toStock, volume = order[0], order[1], order[2]
+        if toStock not in BALANCE.keys():
+            BALANCE[toStock] = volume * ALL_PAIRS[f"close_{fromStock},{toStock}"]
+        else:
+            BALANCE[toStock] += volume * ALL_PAIRS[f"close_{fromStock},{toStock}"]
 
 
 def sync():
@@ -43,12 +49,11 @@ def load_secret() -> None:
         reg_user(USER)
 
 
-def get_all_pairs() -> dict:
-    sync()
+def get_all_pairs():
     response = requests.get(f"{HOST}/getAllPairs")
 
     if response.status_code == 200:
-        return response.json()
+        ALL_PAIRS = response.json()
     else:
         print("FAILED: getAllPairs")
 
@@ -71,6 +76,7 @@ def create_orders(orders: list) -> None:
 
 
 def balance():
+    global BALANCE
     response = requests.get(f"{HOST}/balance/{USER}")
     if response.status_code == 200:
         BALANCE = response.json()
@@ -107,5 +113,9 @@ def tick_finder(time_wait=30, num_hops=3) -> None:
 
 if __name__ == "__main__":
     load_secret()
-    tick_finder()
+    #tick_finder()
     balance()
+    print(BALANCE)
+    get_all_pairs()
+    update_balance([("MBOX", "BTC", 100)])
+    print(BALANCE)
