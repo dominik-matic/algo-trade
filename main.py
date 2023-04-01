@@ -2,13 +2,17 @@ import requests
 import json
 import time
 
-from config import USER
+from config import USER, FIX_DELAY, HOST, TICKRATE
 
 SECRET = None
-HOST = "http://192.168.1.101:3000"
+TICK_TIME = None
 
+def sync():
+    while time.time() < TICK_TIME:
+        TICK_TIME += TICKRATE
+    time.sleep(TICKTIME - time.time())
 
-def reg_user(username):
+def reg_user(username: str) -> None:
     response = requests.get(f"{HOST}/register/{username}")
     if response.status_code == 200:
         secret = response.json()["secret"]
@@ -18,12 +22,12 @@ def reg_user(username):
         print("FAILED: register")
 
 
-def save_secret(secret):
+def save_secret(secret: str) -> None:
     with open(".secret", "w") as file:
         file.write(secret)
 
 
-def load_secret():
+def load_secret() -> None:
     global SECRET
     try:
         with open(".secret", "r") as file:
@@ -32,17 +36,17 @@ def load_secret():
         reg_user(USER)
 
 
-def get_all_pairs():
-
+def get_all_pairs() -> dict:
+    sync()
     response = requests.get(f"{HOST}/getAllPairs")
 
     if response.status_code == 200:
-        return json.dumps(response.json())
+        return response.json()
     else:
         print("FAILED: getAllPairs")
 
 
-def create_orders(orders: list):
+def create_orders(orders: list) -> None:
     """Create orders.
 
     Orders = [(FROM, TO, VOLUME), (BTC, USD, 100)]
@@ -59,16 +63,16 @@ def create_orders(orders: list):
         print(f"FAILED: order ({orders})")
 
 
-def balance():
+def balance() -> dict:
     response = requests.get(f"{HOST}/balance/{USER}")
     if response.status_code == 200:
-        return json.dumps(response.json())
+        return response.json()
     else:
         print(response.json())
         print("FAILED: balance")
 
 
-def get_time():
+def get_current_tick() -> int:
     response = requests.get(f"{HOST}/getTime")
     if response.status_code == 200:
         return int(response.json())
@@ -77,27 +81,23 @@ def get_time():
         return None
 
 
-def tick_finder(time_wait=30, num_hops=3):
+def tick_finder(time_wait=30, num_hops=3) -> None:
     delay = 0.25
-    current_tick = get_time()
+    current_tick = get_current_tick()
 
     for i in range(num_hops):
         while True:
             time.sleep(delay)
-            next_tick = get_time()
+            next_tick = get_current_tick()
             if current_tick != next_tick:
                 break
         if i < num_hops - 1:
             time.sleep(time_wait - (delay * 1.02))
-            delay /= 10
+            delay /= 4
 
-    return time.time()
+    TICK_TIME = time.time() + FIX_DELAY
 
 
 if __name__ == "__main__":
     load_secret()
-    get_time()
     tick_finder()
-    while True:
-        print(get_time())
-        time.sleep(30)
