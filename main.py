@@ -1,10 +1,10 @@
 import requests
 import json
 import time
-import VeryCool
 import threading
 
 from config import USER, FIX_DELAY, HOST, TICKRATE, NUM_HOPS
+from VeryCool import find_stonks
 
 SECRET = None
 TICK_TIME = None
@@ -128,7 +128,24 @@ def tick_finder(time_wait=30, num_hops=NUM_HOPS) -> None:
     TICK_TIME = time.time() + FIX_DELAY
 
 
-def trade(orders):
+def trade():
+    closeDict, volumeDict, idx2key, key2idx, cycles, fran_cycles = find_stonks(
+        ALL_PAIRS, ["ATOM"], n_cycles=5, max_depth=5
+    )
+    orders = fran_cycles[0]
+
+    start = [3 * 10**8]
+    for order in orders:
+        print(volumeDict[order[0]][order[1]])
+        start.append(
+            min(
+                int((start[-1] * closeDict[order[0]][order[1]]) / 10**8),
+                volumeDict[order[0]][order[1]],
+            )
+        )
+
+    orders = list((order[0], order[1], vol) for order, vol in zip(orders, start))
+
     if create_orders(orders):
         update_balance(orders)
 
@@ -149,8 +166,7 @@ def main():
     time.sleep(NUM_HOPS * TICKRATE + TICKRATE / 3)
 
     while True:
-        print(ALL_PAIRS["close_ETH,OP"])
-        time.sleep(2)
+        trade()
 
 
 if __name__ == "__main__":
