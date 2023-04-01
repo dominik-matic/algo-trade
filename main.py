@@ -2,8 +2,9 @@ import requests
 import json
 import time
 import VeryCool
+import threading
 
-from config import USER, FIX_DELAY, HOST, TICKRATE
+from config import USER, FIX_DELAY, HOST, TICKRATE, NUM_HOPS
 
 SECRET = None
 TICK_TIME = None
@@ -31,9 +32,10 @@ def update_balance(orders: list):
 
 
 def sync():
-    while time.time() < TICK_TIME:
+    global TICK_TIME
+    while time.time() > TICK_TIME:
         TICK_TIME += TICKRATE
-    time.sleep(TICKTIME - time.time())
+    time.sleep(TICK_TIME - time.time())
 
 
 def reg_user(username: str) -> None:
@@ -108,7 +110,7 @@ def get_current_tick() -> int:
         return None
 
 
-def tick_finder(time_wait=30, num_hops=3) -> None:
+def tick_finder(time_wait=30, num_hops=NUM_HOPS) -> None:
     global TICK_TIME
     delay = 0.25
     current_tick = get_current_tick()
@@ -127,19 +129,28 @@ def tick_finder(time_wait=30, num_hops=3) -> None:
 
 
 def trade(orders):
-    # sync()
-    get_all_pairs()  # TODO move
     if create_orders(orders):
         update_balance(orders)
 
 
+def update_thread():
+    tick_finder()
+    get_all_pairs()
+
+    while True:
+        sync()
+        get_all_pairs()
+
+
 def main():
     load_secret()
-    # tick_finder()
-    balance()
 
-    orders = [("BTC", "ATOM", 0)]
-    trade(orders)
+    threading.Thread(target=update_thread).start()
+    time.sleep(NUM_HOPS * TICKRATE + TICKRATE / 3)
+
+    while True:
+        print(ALL_PAIRS["close_ETH,OP"])
+        time.sleep(2)
 
 
 if __name__ == "__main__":
