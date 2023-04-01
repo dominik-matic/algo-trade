@@ -4,11 +4,11 @@ import json
 from config import USER
 
 SECRET = None
-host = "http://192.168.1.101:3000"
+HOST = "http://192.168.1.101:3000"
 
 
 def reg_user(username):
-    response = requests.get(f"{host}/register/{username}")
+    response = requests.get(f"{HOST}/register/{username}")
     if response.status_code == 200:
         secret = response.json()["secret"]
         save_secret(secret)
@@ -33,7 +33,7 @@ def load_secret():
 
 def get_all_pairs():
 
-    response = requests.get(f"{host}/getAllPairs")
+    response = requests.get(f"{HOST}/getAllPairs")
 
     if response.status_code == 200:
         return json.dumps(response.json())
@@ -50,7 +50,7 @@ def create_orders(orders: list):
         orders (list): orders
     """
     orders = "|".join(",".join(order) for order in orders)
-    response = requests.get(f"{host}/createOrders/{USER}/{SECRET}/{orders}")
+    response = requests.get(f"{HOST}/createOrders/{USER}/{SECRET}/{orders}")
 
     if response.status_code == 200:
         print(f"successfull trades: {orders}")
@@ -59,7 +59,7 @@ def create_orders(orders: list):
 
 
 def balance():
-    response = requests.get(f"{host}/balance/{USER}")
+    response = requests.get(f"{HOST}/balance/{USER}")
     if response.status_code == 200:
         return json.dumps(response.json())
     else:
