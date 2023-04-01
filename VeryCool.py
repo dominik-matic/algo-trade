@@ -54,6 +54,8 @@ def find_stonks(data, poss, n_cycles=5, max_depth=20, time_limit=500):
 	volumeDict = defaultdict(lambda: defaultdict(lambda:0))
 	keys = set()
 	for key in data:
+		if int(data[key]) == 0:
+			continue
 		parsed_key = key.split('_')
 		type = parsed_key[0]
 		source, dest = parsed_key[1].split(',')		
@@ -63,11 +65,6 @@ def find_stonks(data, poss, n_cycles=5, max_depth=20, time_limit=500):
 			volumeDict[source][dest] = data[key]
 		elif type == 'close':
 			closeDict[source][dest] = data[key]
-
-#	for kv1 in volumeDict:
-#		print(kv1)
-#		for kv2 in volumeDict[kv1]:
-#			print(f'\t{kv2}={volumeDict[kv1][kv2]}')
 	
 	idx2key = {i: k for i, k in enumerate(keys)}
 	key2idx = {k: i for i, k in enumerate(keys)}	
@@ -92,7 +89,7 @@ def find_stonks(data, poss, n_cycles=5, max_depth=20, time_limit=500):
 	
 	with open("starting_pos.txt", "w") as f:
 		for p in poss:
-			f.write(f'{key2idx[p]}')
+			f.write(f'{key2idx[p]} ')
 	
 	os.system(f"./lol -n {n_cycles} -d {max_depth} -t {time_limit}")
 
@@ -110,5 +107,5 @@ def find_stonks(data, poss, n_cycles=5, max_depth=20, time_limit=500):
 if __name__ == '__main__':
 	import requests
 	data = requests.get(url='http://192.168.1.101:3000/getAllPairs').json()
-	closeDict, volumeDict, idx2key, key2idx, cycles, fran_cycles = find_stonks(data, ['ATOM'])
+	closeDict, volumeDict, idx2key, key2idx, cycles, fran_cycles = find_stonks(data, ['ATOM', 'BTC', 'MATIC'])
 	print(fran_cycles)

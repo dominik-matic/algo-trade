@@ -1,4 +1,4 @@
-CC=g++-10
+CC=g++
 CLAGS=-Ofast
 FILES=lol.cpp
 
