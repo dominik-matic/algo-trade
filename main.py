@@ -10,15 +10,16 @@ TICK_TIME = None
 BALANCE = {}
 ALL_PAIRS = {}
 
-def update_balance(orders): #lista tupla (from, to, volume)
+
+def update_balance(orders):  # lista tupla (from, to, volume)
     for order in orders:
         fromStock, toStock, volume = order
-        
+
         if toStock not in BALANCE.keys():
-            BALANCE[toStock] = volume * ALL_PAIRS[f"close_{fromStock},{toStock}"]
+            BALANCE[toStock] = int(volume * ALL_PAIRS[f"close_{fromStock},{toStock}"])
         else:
-            BALANCE[toStock] += volume * ALL_PAIRS[f"close_{fromStock},{toStock}"]
-        BALANCE[fromStock] -= volume * 10**8
+            BALANCE[toStock] += int(volume * ALL_PAIRS[f"close_{fromStock},{toStock}"])
+        BALANCE[fromStock] -= int(volume * 10**8)
 
 
 def sync():
@@ -33,7 +34,6 @@ def reg_user(username: str) -> None:
         secret = response.json()["secret"]
         save_secret(secret)
     else:
-        print(response.json())
         print("FAILED: register")
 
 
@@ -61,7 +61,7 @@ def get_all_pairs():
         print("FAILED: getAllPairs")
 
 
-def create_orders(orders: list) -> None:
+def create_orders(orders: list) -> bool:
     """Create orders.
 
     Orders = [(FROM, TO, VOLUME), (BTC, USD, 100)]
@@ -69,13 +69,19 @@ def create_orders(orders: list) -> None:
     Args:
         orders (list): orders
     """
+    orders = list(
+        (order[0], order[1], str(int(order[2] * 10**8))) for order in orders
+    )
+
     orders = "|".join(",".join(order) for order in orders)
     response = requests.get(f"{HOST}/createOrders/{USER}/{SECRET}/{orders}")
 
     if response.status_code == 200:
         print(f"successfull trades: {orders}")
+        return True
     else:
         print(f"FAILED: order ({orders})")
+        return False
 
 
 def balance():
@@ -84,7 +90,6 @@ def balance():
     if response.status_code == 200:
         BALANCE = response.json()
     else:
-        print(response.json())
         print("FAILED: balance")
 
 
@@ -115,12 +120,23 @@ def tick_finder(time_wait=30, num_hops=3) -> None:
     TICK_TIME = time.time() + FIX_DELAY
 
 
+def trade(orders):
+    # sync()
+    get_all_pairs()  # TODO move
+    if create_orders(orders):
+        update_balance(orders)
+
+
 if __name__ == "__main__":
     load_secret()
-    #tick_finder()
+    # tick_finder()
     balance()
-    BALANCE["USDT"] = 100
-    get_all_pairs()
-    res = update_balance([("USDT", "BTC", 10111)])
-    print(res)
+
+    orders = [("BTC", "USDT", 0.001)]
+    trade(orders)
+
+    save_bal = BALANCE.copy()
+    balance()
+    print(save_bal)
     print(BALANCE)
+    print(save_bal == BALANCE)
