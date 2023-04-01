@@ -91,9 +91,13 @@ void dfs(
 void find_cycles(std::vector<size_t> &startingPos, std::vector<std::pair<std::vector<size_t>, double>> &cycles, hmap &volumeMap, hmap &closeMap, size_t amount, size_t max_depth, size_t time_limit) {
 	std::unordered_set<size_t> visited;
 	std::vector<size_t> current;
-	size_t dfs_amount = amount / startingPos.size();
+	
+	std::shuffle(std::begin(startingPos), std::end(startingPos), rng);
+
+	size_t dfs_amount = std::max(amount / startingPos.size(), 1UL);
 	bool running = true;
 	auto start = std::chrono::high_resolution_clock::now();
+
 	for(size_t i = 0; i < startingPos.size() && running; ++i) {
 		current.clear();
 		current.push_back(startingPos[i]);
@@ -128,7 +132,7 @@ void write_output(std::vector<std::pair<std::vector<size_t>, double>> &cycles) {
 }
 
 void find_ways_back(std::vector<size_t> &paths_back) {
-	
+
 }
 
 int main(int argc, char* argv[]) {
