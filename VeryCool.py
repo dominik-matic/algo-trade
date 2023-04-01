@@ -1,5 +1,6 @@
 import numpy as np
 from collections import defaultdict
+import os
 
 
 def convertToMatrix(data):
@@ -48,7 +49,7 @@ def convertToMatrix(data):
 			file.write('\n')
 	
 
-def save_to_file(data, poss):
+def find_stonks(data, poss, n_cycles=5, max_depth=20, time_limit=1000):
 	closeDict = defaultdict(lambda: defaultdict(lambda:0))
 	volumeDict = defaultdict(lambda: defaultdict(lambda:0))
 	keys = set()
@@ -87,8 +88,16 @@ def save_to_file(data, poss):
 	with open("starting_pos.txt", "w") as f:
 		for p in poss:
 			f.write(f'{key2idx[p]}')
+	
+	os.system(f"./lol -n {n_cycles} -d {max_depth}")
 
-	return closeDict, volumeDict, idx2key, key2idx
+	cycles = None
+	with open("out.txt", "r") as f:
+		cycles = eval(f.readline())
+	
+#	fran_cycles = [(idx2key[cycles[i][0][j]],idx2key[cycles[i][0][j + 1]],-1) for i in range(len(cycles)) for j in range(len(cycles[i][0]) - 1)]
+
+	return closeDict, volumeDict, idx2key, key2idx, cycles#, fran_cycles
 
 
 
@@ -96,5 +105,5 @@ def save_to_file(data, poss):
 if __name__ == '__main__':
 	import requests
 	data = requests.get(url='http://192.168.1.101:3000/getAllPairs').json()
-	save_to_file(data, ['USDT'])
-	#convertToMatrix(data)
+	closeDict, volumeDict, idx2key, key2idx, cycles = find_stonks(data, ['USDT'])
+	print(cycles)
