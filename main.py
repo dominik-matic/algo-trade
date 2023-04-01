@@ -9,6 +9,10 @@ TICK_TIME = None
 BALANCE = {}
 
 
+def update_balance(orders):
+    pass
+
+
 def sync():
     while time.time() < TICK_TIME:
         TICK_TIME += TICKRATE
