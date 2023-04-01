@@ -11,7 +11,15 @@ BALANCE = {}
 ALL_PAIRS = {}
 
 
-def update_balance(orders):  # lista tupla (from, to, volume)
+def update_balance(orders: list):
+    """Update balance.
+
+    Orders = [(FROM, TO, VOLUME), (BTC, USD, 100)]
+    100 is NOT * 10**8 !
+
+    Args:
+        orders (list): orders
+    """
     for order in orders:
         fromStock, toStock, volume = order
 
