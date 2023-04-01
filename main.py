@@ -102,3 +102,4 @@ def tick_finder(time_wait=30, num_hops=3) -> None:
 if __name__ == "__main__":
     load_secret()
     tick_finder()
+    balance()
