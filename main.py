@@ -21,6 +21,7 @@ def update_balance(orders: list):
     Args:
         orders (list): orders
     """
+    global BALANCE
     for order in orders:
         fromStock, toStock, volume = order
 
@@ -129,29 +130,42 @@ def tick_finder(time_wait=30, num_hops=NUM_HOPS) -> None:
 
 
 def trade():
+
+    all_tickers = list(ticker for ticker in BALANCE if BALANCE[ticker] > 0)
+    print(all_tickers)
+
     closeDict, volumeDict, idx2key, key2idx, cycles, fran_cycles = find_stonks(
-        ALL_PAIRS, ["ATOM"], n_cycles=5, max_depth=50
+        ALL_PAIRS, all_tickers, n_cycles=5, max_depth=50
     )
-    orders = fran_cycles[0]
+    cycles = fran_cycles
+    for orders in cycles:
 
-    start = [3 * 10**8]
-    for order in orders:
-        print(volumeDict[order[0]][order[1]])
-        start.append(
-            min(
-                int((start[-1] * closeDict[order[0]][order[1]]) / 10**8),
-                volumeDict[order[0]][order[1]],
+        min_volume = min(volumeDict[order[0]][order[1]] for order in orders)
+        if min_volume == 0:
+            continue
+
+        start = [1 * 10**2]
+        for order in orders:
+            if volumeDict[order[0]][order[1]] == 0:
+                start = None
+                break
+            print(volumeDict[order[0]][order[1]])
+            start.append(
+                min(
+                    int((start[-1] * closeDict[order[0]][order[1]]) / 10**8),
+                    volumeDict[order[0]][order[1]],
+                )
             )
-        )
 
-    orders = list((order[0], order[1], vol) for order, vol in zip(orders, start))
+        orders = list((order[0], order[1], vol) for order, vol in zip(orders, start))
 
-    if create_orders(orders):
-        update_balance(orders)
+        if create_orders(orders):
+            update_balance(orders)
 
 
 def update_thread():
     tick_finder()
+    balance()
     get_all_pairs()
 
     while True:
