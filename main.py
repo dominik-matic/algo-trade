@@ -6,6 +6,7 @@ from config import USER, FIX_DELAY, HOST, TICKRATE
 
 SECRET = None
 TICK_TIME = None
+BALANCE = {}
 
 def sync():
     while time.time() < TICK_TIME:
@@ -63,10 +64,10 @@ def create_orders(orders: list) -> None:
         print(f"FAILED: order ({orders})")
 
 
-def balance() -> dict:
+def balance():
     response = requests.get(f"{HOST}/balance/{USER}")
     if response.status_code == 200:
-        return response.json()
+        BALANCE = response.json()
     else:
         print(response.json())
         print("FAILED: balance")
