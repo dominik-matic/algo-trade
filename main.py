@@ -25,7 +25,7 @@ def save_secret(secret):
 def load_secret():
     try:
         with open(".secret", "r") as file:
-            secret = file.read()
+            secret = file.read().strip()
     except Exception:
         reg_user(USER)
 
