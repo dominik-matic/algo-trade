@@ -50,6 +50,7 @@ def load_secret() -> None:
 
 
 def get_all_pairs():
+    global ALL_PAIRS
     response = requests.get(f"{HOST}/getAllPairs")
 
     if response.status_code == 200:
@@ -95,6 +96,7 @@ def get_current_tick() -> int:
 
 
 def tick_finder(time_wait=30, num_hops=3) -> None:
+    global TICK_TIME
     delay = 0.25
     current_tick = get_current_tick()
 
